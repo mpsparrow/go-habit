@@ -2,11 +2,15 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/favicon"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/monitor"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/mpsparrow/go-habit/v1/routes"
 )
 
@@ -14,6 +18,13 @@ func main() {
 	app := fiber.New()
 
 	app.Use(logger.New())
+	app.Use(favicon.New())
+	app.Use(recover.New())
+	app.Use(limiter.New(limiter.Config{
+		Max:               20,
+		Expiration:        30 * time.Second,
+		LimiterMiddleware: limiter.SlidingWindow{},
+	}))
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
@@ -29,7 +40,6 @@ func main() {
 	})
 
 	// User Routes
-
 	users := v1.Group("/users")
 	routes.UserRoute(users)
 
